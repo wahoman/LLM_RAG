@@ -1,122 +1,58 @@
-https://youtu.be/NfQrRQmDrcc?si=Q39srg3auFkdBHK8
-테디노트 보면서 공부중
 
 
-Document Loader선택시 고려사항
+## 개요
 
-• fitz
-• 단순하게 모든 Text 를 읽어서 하나의 문자열을 합칠 때 유용
-• 전체 페이지 요약
-• 페이지를 읽는 속도가 가장 빠름
-• 페이지 번호 제공
-• 페이지 번호를 제외한 metadata 미지원
+문서 로더는 속도, 메타데이터 처리, 텍스트 추출 등 다양한 요구 사항에 맞게 특화된 기능을 제공하는 문서 처리의 필수 도구입니다. 여기 인기 있는 문서 로더들의 개요입니다:
 
+### Fitz
+- **장점:** 페이지를 읽는 속도가 가장 빠르며, 페이지 번호를 제공합니다. 모든 텍스트를 하나의 문자열로 합치는 데 이상적입니다.
+- **제한 사항:** 페이지 번호를 제외한 메타데이터를 지원하지 않습니다.
 
+### PyPDFLoader
+- **특징:** 예제 코드에 자주 사용되며, 한글 인코딩 처리가 효과적이고 속도가 적당합니다.
+- **기능:** 페이지 단위로 데이터를 로드하며, 20페이지 PDF는 20개의 별도 문서로 로드됩니다.
+- **메타데이터:** 파일명과 페이지 번호를 포함합니다.
 
-• PyPDFLoader
-• 예제 코드에 가장 많이 출현하는 방식
-• 평균적으로 우수(한글 인코딩 처리, 속도, metadata)
-• page 단위로 데이터를 로드
-• 20 page PDF 파일 로드시: 20개의 문서로 로드
-• metadata
-• source: 파일명
-• page: 페이지 번호 표기
+### UnstructuredPDFLoader
+- **세부 사항:** 가장 많은 메타데이터 정보를 제공합니다.
+- **모드:** 페이지 내 세부 요소 정보(좌표)를 로드할 때 `elements` 모드를 사용합니다.
+- **추천:** 속도가 우선시되고 자세한 메타데이터가 필요 없다면 사용을 고려하지 않는 것이 좋습니다.
 
+### PDFPlumber
+- **능력:** 한글 인코딩 처리 능력이 우수하며, 다양한 메타데이터 정보를 제공합니다.
+- **성능:** 읽기 속도가 가장 느리며, 대량의 페이지를 포함하는 문서 처리에 시간이 많이 소요됩니다.
 
+## 텍스트 분할기
 
-UnstructuredPDFLoader
-• 가장 많은 metadata 정보 제공
-• 요소별 Load 가능
-• mode=“elements”
-• 페이지 안의 세부 요소에 대한 정보(좌표)가 필요하다면 좋은 Loader
-• 단, 속도가 다른 Loader 대비 느림
-• metadata 정보 중 페이지번호를 제외한 다른 metadata 정보가 필요 없다면 과감히 SKIP!
+텍스트 분할기는 특정 기준에 따라 문서를 세분화하는 데 사용됩니다. 주요 텍스트 분할기는 다음과 같습니다:
 
+### CharacterTextSplitter
+- **사용법:** 공백이나 마침표를 기준으로 텍스트를 가장 작은 단위로 분할합니다.
+- **주의점:** 중요한 소제목에서 텍스트가 잘릴 수 있습니다.
 
+### RecursiveCharacterTextSplitter
+- **접근 방식:** 청크가 충분히 작아질 때까지 순서대로 분할합니다.
+- **순서:** 단락에서 문장으로, 문장에서 단어로, 의미 있는 텍스트 세그먼트를 유지합니다.
 
-PDFPlumber
-• 한글 인코딩 처리 능력이 우수하고, 다양한 metadata 정보를 제공
-• 다양한 metadata 정보를 포함하고 있음 (Author, ModDate)
-• 단, 읽기 속도가 가장 느림(UnstructuredPDFLoader 와 비슷한 수준)
-• 따라서, 다량의 페이지를 포함하는 문서는 Parsing에 꽤 많은 시간이 소요
+### TokenTextSplitter
+- **통합:** 한글 처리의 명확성을 위해 KonlpyTextSplitter와 함께 사용합니다.
+- **적합성:** 분석적 깊이가 속도보다 우선시되는 애플리케이션에 적합합니다.
 
+### HuggingFace
+- **업데이트:** 속도와 성능 면에서 지속적으로 개선되고 있습니다.
+- **기능:** `tokenizer.trainer`를 사용하여 특정 도메인 용어(의료 용어 등)에 대해 파인튜닝이 가능합니다.
 
+### SemanticChunker (실험적)
+- **목적:** 의미 유사성에 따라 텍스트를 분할합니다.
+- **특징:** 초기화에 `chunk_size`나 `chunk_overlap`과 같은 파라미터를 사용하지 않습니다.
 
+## 임베딩
 
-Text Splitter
+임베딩은 텍스트의 벡터 표현을 만들어, 의미 검색과 같은 작업을 수행할
 
-문서를 특정 기준으로 분할(Chunk) 할 때 활용
-목록
-• CharacterTextSplitter
-• RecursiveCharacterTextSplitter
-• TokenTextSplitter
-• HuggingFace
-• SemanticChunker(experimental)
+ 수 있게 합니다. 특히 다국어를 고려할 때 적합한 임베딩 모델을 선택하는 것이 중요합니다.
 
-CharacterTextSplitter
-분할 가능한 최소의 단위로 분할을 시도
-• 공백 이나 “.” 을 기준으로 분할
-• 중요한 문서의 소제목에서 텍스트가 잘릴 수 있음
-• 이는 chunk_overlap 이 궁극적인 해결책이 안되는 경우가 많음
-
-
-RecursiveCharacterTextSplitter
-• 범용적으로 많이 사용되는 분할 방식
-• 청크가 충분히 작아질 때까지 순서대로 분할하려고 시도
-• 기본 목록은 ["\n\n", "\n", " ", ""]
-• 단락 ➡ 문장 ➡ 단어 순서로 함께 유지하려고 시도하는 효과가 있는데, 이는 일반적으로 텍스트의 가장 강력한 의미 관련 부분으로
-보이기 때문
-
-
-TokenTextSplitter
-• 토큰 단위로 분할
-• TokenTextSplitter 를 바로 사용하면 한글 처리가 모호함
-• 따라서, KonlpyTextSplitter 를 사용하면 해결책이 될 수 있음
-• Kkma 은 빠른 텍스트 처리보다 분석적 심도가 우선시되는 애플리케이션에 적합
-
-
-HuggingFace
-• 속도와 성능 면에서 개선된 버전이 지속적으로 업데이트 되고 있으므로, 최적의 토크나이저를 다양하게 테스트 해 볼 수 있
-음
-• 신조어, 특정 도메인 용어(의료 용어) 등의 tokenizer.trainer 로 Fine-Tuning 혹은 단순 추가(add) 가능
-• 대표적인 Tokenizer
-• Subword Tokenizer
-• BPE
-• WordPiece
-• SentencePiece
-• spaCy
-• Moses
-
-
-SemanticChunker
-langchain_experimental 에 신규 추가된 Chunker
-• 텍스트를 의미 유사성에 따라 분할
-• 다른 Tokenizer 와 달리 chunk_size, chunk_overlap 과 같은 파라미터를 initialize 에 사용하지 않는 것이 특징
-
-
-
-
-
-Embedding
-임베딩은 텍스트의 벡터 표현을 만든다
-벡터 공간에서 가장 유사한 텍스트를 찾는 semantic Search(의미검색)과 같은 작업을 수행할 수 있기 때문에 유용하다.
-따라서 문서에 적합한 Embedding모델을 선택하는것은 중요하다. 한글(다국어)까지 고려
-Langchain의 기본 Embeddings 클래스는 두 가지 매서드를 제공한다
--Document(문서) Embedding
--Query Embedding
-
-주요 Embedding 목록
--OpenaiEmbedding
--Opensource(HugginhFace)
- -BGE
- -Mistral
-
-
-
-Openaiembedding
-• OpenAI 에서 제공하는 유료 Embedding
-• 토큰당 과금이 되는 방식 (2024.01.25 신규 모델이 이전 모델의 비용 1/5 로 출시되어 고무적인 상황)
-• 사용방식이 편리하며 성능이 보장 된다는 이점이 있음 (로컬에 Embedding pipeline 생략 가능)
-• 하지만, 문서의 양이 많다면 그만큼 과금에 대한 고려를 피할 수 없음
-• 지속적인 비용 발생이 부담으로 작용할 수 있음
+### 주요 임베딩 모델
+- **OpenaiEmbedding:** 토큰당 과금되는 모델로 성능이 보장됩니다. 로컬 임베딩 파이프라인이 필요 없습니다.
+- **Opensource (HuggingFace), BGE, Mistral:** 다양한 기능과 가격을 제공하는 대안입니다.
 
